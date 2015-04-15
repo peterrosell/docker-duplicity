@@ -1,0 +1,1 @@
+__CRON_EXPR__ /bin/bash -c 'source /config/env && /usr/local/bin/duplicity /data $DEST_URL && sleep 5 && echo "" > /tmp/log' >> /tmp/log 2>&1

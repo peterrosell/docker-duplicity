@@ -8,8 +8,8 @@ pyrax
 dropbox
 # Copy.com
 urllib3
-# Google Docs
-gdata
+# Google Drive
+pyDrive
 # SSH
 paramiko
 pycrypto

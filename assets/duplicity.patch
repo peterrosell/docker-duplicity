@@ -1,0 +1,73 @@
+--- duplicity-0.7.02/duplicity/backend.py	2015-03-11 12:33:37.000000000 +0000
++++ duplicity-0.7.02.new/duplicity/backend.py	2015-04-11 22:35:42.631945696 +0000
+@@ -253,6 +253,11 @@ class ParsedUrl:
+             pu = urlparse.urlparse(url_string)
+         except Exception:
+             raise InvalidBackendURL("Syntax error in: %s" % url_string)
++        if pu.query:     
++            try:
++                self.keyfile = urlparse.parse_qs(pu.query)['keyfile']
++            except Exception:
++                raise InvalidBackendURL("Syntax error (keyfile) in: %s" % url_string)
+ 
+         try:
+             self.scheme = pu.scheme
+diff -rupN duplicity-0.7.02/duplicity/backends/pydrivebackend.py duplicity-0.7.02.new/duplicity/backends/pydrivebackend.py
+--- duplicity-0.7.02/duplicity/backends/pydrivebackend.py	2015-03-11 12:33:37.000000000 +0000
++++ duplicity-0.7.02.new/duplicity/backends/pydrivebackend.py	2015-04-11 22:25:18.075943496 +0000
+@@ -39,14 +39,47 @@ class PyDriveBackend(duplicity.backend.B
+             raise BackendException('PyDrive backend requires PyDrive installation'
+                                    'Please read the manpage to fix.')
+ 
+-        if 'GOOGLE_DRIVE_ACCOUNT_KEY' not in os.environ:
+-            raise BackendException('GOOGLE_DRIVE_ACCOUNT_KEY environment variable not set. Please read the manpage to fix.')
+-        account_key = os.environ['GOOGLE_DRIVE_ACCOUNT_KEY']
+-
+-        credentials = SignedJwtAssertionCredentials(parsed_url.username + '@' + parsed_url.hostname, account_key, scope='https://www.googleapis.com/auth/drive')
+-        credentials.authorize(httplib2.Http())
+-        gauth = GoogleAuth()
+-        gauth.credentials = credentials
++        if 'GOOGLE_AUTH_MODE' not in os.environ:
++            raise BackendException('GOOGLE_AUTH_MODE environment variable not set. Please read the manpage to fix.')
++        auth_mode = os.environ['GOOGLE_AUTH_MODE']
++
++        if auth_mode != 'managed' and auth_mode != 'personal':
++            raise BackendException('GOOGLE_AUTH_MODE environment variable not set to either "managed" or "personal". Please read the manpage to fix.')
++
++        if auth_mode == 'managed':
++            if 'GOOGLE_DRIVE_ACCOUNT_KEY' not in os.environ:
++                raise BackendException('GOOGLE_DRIVE_ACCOUNT_KEY environment variable not set. Please read the manpage to fix.')
++            account_key = os.environ['GOOGLE_DRIVE_ACCOUNT_KEY']
++
++            credentials = SignedJwtAssertionCredentials(parsed_url.username + '@' + parsed_url.hostname, account_key, scope='https://www.googleapis.com/auth/drive')
++            credentials.authorize(httplib2.Http())
++            gauth = GoogleAuth()
++            gauth.credentials = credentials
++
++        else:
++            if 'GOOGLE_SECRETS_FILE' not in os.environ:
++                raise BackendException('GOOGLE_SECRETS_FILE environment variable not set. Please read the manpage to fix.')
++            secrets_file = os.environ['GOOGLE_SECRETS_FILE']
++
++            if 'GOOGLE_CREDENTIALS_FILE' not in os.environ:
++                raise BackendException('GOOGLE_CREDENTIALS_FILE environment variable not set. Please read the manpage to fix.')
++            credentials_file = os.environ['GOOGLE_CREDENTIALS_FILE']
++
++            gauth = GoogleAuth()
++
++            gauth.LoadClientConfigFile(secrets_file)
++            gauth.LoadCredentialsFile(credentials_file)
++
++            if gauth.credentials is None:
++                gauth.CommandLineAuth()
++
++                if gauth.access_token_expired:
++                    gauth.Refresh()
++                else:
++                    gauth.Authorize()
++
++                    gauth.SaveCredentialsFile(credentials_file)
++
+         self.drive = GoogleDrive(gauth)
+ 
+         # Dirty way to find root folder id
