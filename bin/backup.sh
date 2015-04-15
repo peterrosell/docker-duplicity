@@ -39,7 +39,7 @@ elif [ "$1" == "help" ]; then
 	echo "       -v /persistent/storage/for/keys:/keys \\"
 	echo "       -v /optional/cache/storage:/cache \\"
 	echo "       -v /etc/localtime:/etc/localhost:ro \\"
-	echo "       duplicity <action> <options>"
+	echo "       peterrosell/duplicity <action> <options>"
 	echo ""
 	echo "backup <age>      - Backup incremental or full if previous full backup is older than <age>"
 	echo "                    Example: backup 7D"
