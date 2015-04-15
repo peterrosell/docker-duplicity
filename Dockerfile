@@ -44,4 +44,4 @@ ADD bin/* /usr/local/bin/
 
 # Set the ENTRYPOINT
 ENTRYPOINT [ "/usr/local/bin/backup.sh" ]
-CMD [ "backup-inc" ]
+CMD [ "backup-cronjob" ]
