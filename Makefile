@@ -25,7 +25,7 @@ backup-full:
 	COMMAND=backup-full ARGUMENTS="--rm -it" make backup-command
 
 backup-cronjob:
-	COMMAND=backup-cronjob ARGUMENTS="-d --name duplicity --env CRON_EXPR='* * * * *'" make backup-command
+	ARGUMENTS="-d --name duplicity --env CRON_EXPR='* * * * *'" make backup-command
 
 enter-container:
 	COMMAND=/bin/bash ARGUMENTS="--rm -it" make backup-command
